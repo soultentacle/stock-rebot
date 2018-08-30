@@ -8,21 +8,29 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.util.EntityUtils;
+import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 采集历史K线数据
  * Created by dell on 2018/7/26.
  */
+@Service
 public class HistoryKLineDataCollector {
 
     public void execute() {
 
+    }
+
+    public List<String[]> downloadData(String code, String year) {
+        List<String[]> datas = new ArrayList<String[]>();
         CloseableHttpClient httpclient = HttpClients.createDefault();
-        HttpGet httpGet = new HttpGet(StringFormatter.format("http://data.gtimg.cn/flashdata/hushen/daily/%s/%s.js?visitDstTime=1","","").getValue());
+        HttpGet httpGet = new HttpGet(StringFormatter.format("http://data.gtimg.cn/flashdata/hushen/daily/%s/%s.js?visitDstTime=1", year, code).getValue());
         CloseableHttpResponse response1 = null;
         try {
             response1 = httpclient.execute(httpGet);
@@ -35,12 +43,10 @@ public class HistoryKLineDataCollector {
                 if (lineNum > 2 && !"\";".equals(str)) {
                     String clearStr = str.replace("\\n\\", "");
                     String[] attrs = clearStr.split(" ");
-                    System.out.println(new KLineTarget("sz000750", attrs));
+                    datas.add(attrs);
                 }
             }
-
         } catch (IOException e) {
-            e.printStackTrace();
             if (response1 != null) {
                 try {
                     response1.close();
@@ -49,9 +55,11 @@ public class HistoryKLineDataCollector {
                 }
             }
         }
+        return datas;
     }
 
+
     public static void main(String[] args) {
-        new HistoryKLineDataCollector().execute();
+        System.out.println(new HistoryKLineDataCollector().downloadData("sh000001", "18").toArray());
     }
 }
